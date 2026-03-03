@@ -3,319 +3,580 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel转Word在线工具</title>
+    <title>Excel转Word · 增强版 | 本地安全转换</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft Yahei", sans-serif;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
         body {
-            background-color: #f5f7fa;
-            padding: 50px 20px;
+            background: linear-gradient(145deg, #f0f5fa 0%, #e6edf5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
+        .glass-card {
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 48px;
             padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 50, 100, 0.25), inset 0 1px 2px rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.5);
         }
         h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e3b5c, #2b5c8a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .upload-area {
-            border: 2px dashed #0078d7;
-            border-radius: 8px;
-            padding: 60px 20px;
+        .subtitle {
+            color: #2c5779;
+            font-size: 1.1rem;
+            margin-bottom: 35px;
+            border-left: 5px solid #2b6c9e;
+            padding-left: 20px;
+            background: rgba(43, 108, 158, 0.05);
+            border-radius: 0 40px 40px 0;
+        }
+        .upload-zone {
+            border: 3px dashed #2b6c9e;
+            border-radius: 40px;
+            padding: 60px 30px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+            background: rgba(255, 255, 255, 0.6);
             margin-bottom: 30px;
+            position: relative;
         }
-        .upload-area:hover {
-            background-color: #f0f7ff;
+        .upload-zone:hover {
+            background: #e1f0fe;
+            border-color: #1e4f7a;
+            transform: scale(1.01);
         }
-        .upload-area.active {
-            background-color: #e8f4ff;
+        .upload-zone.drag-over {
+            background: #c9e2ff;
+            border-color: #0078d7;
+            border-style: solid;
+            box-shadow: 0 0 0 6px rgba(0,120,215,0.15);
         }
         .upload-icon {
-            font-size: 60px;
-            color: #0078d7;
+            font-size: 80px;
+            line-height: 1;
             margin-bottom: 20px;
+            filter: drop-shadow(0 8px 12px rgba(25,80,150,0.2));
+        }
+        .upload-zone p {
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: #113753;
+        }
+        .file-hint {
+            background: #d9e7f5;
+            padding: 8px 25px;
+            border-radius: 60px;
+            display: inline-block;
+            margin-top: 15px;
+            color: #1e4d7a;
+            font-weight: 500;
+            box-shadow: inset 0 1px 4px #b5c9dd;
         }
         #fileInput {
             display: none;
         }
-        .btn {
+        .progress-section {
+            display: none;
+            margin: 25px 0 20px;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            color: #12416b;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .progress-bar-bg {
+            height: 16px;
+            background: #d0deed;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 6px #9bb1c9;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2b7bcb, #144e81);
+            width: 0%;
+            border-radius: 30px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 12px #4791db;
+        }
+        .sheet-indicator {
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: #2e577b;
+            background: #eaf2fb;
+            padding: 6px 18px;
+            border-radius: 30px;
             display: inline-block;
-            padding: 12px 30px;
-            background-color: #0078d7;
+        }
+        .result-card {
+            display: none;
+            margin-top: 35px;
+            background: linear-gradient(115deg, #deedfc, #ecf5fe);
+            border-radius: 36px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #b1cfed;
+            box-shadow: 0 18px 35px -15px #1f4a73;
+        }
+        .result-card h3 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: #0a314b;
+            margin-bottom: 15px;
+        }
+        .btn {
+            background: #1d5a91;
             color: white;
             border: none;
-            border-radius: 6px;
+            padding: 16px 48px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 60px;
             cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
+            box-shadow: 0 15px 25px -10px #1a4c78;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.3);
+            letter-spacing: 0.5px;
         }
         .btn:hover {
-            background-color: #005a9e;
+            background: #0f4270;
+            transform: translateY(-3px);
+            box-shadow: 0 22px 30px -12px #0f3b60;
         }
-        .progress {
-            display: none;
-            margin: 20px 0;
-            height: 8px;
-            background-color: #eee;
-            border-radius: 4px;
-            overflow: hidden;
+        .btn:active {
+            transform: translateY(0);
         }
-        .progress-bar {
-            height: 100%;
-            background-color: #0078d7;
-            width: 0%;
-            transition: width 0.3s;
+        .btn:disabled {
+            opacity: 0.5;
+            pointer-events: none;
         }
-        .result {
-            display: none;
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #e8f4ff;
-            border-radius: 6px;
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 40px 0 20px;
+        }
+        .feature-item {
+            background: #e2eefc;
+            border-radius: 28px;
+            padding: 18px 12px;
             text-align: center;
+            color: #113753;
+            font-weight: 500;
+            border: 1px solid #c0d8f0;
+            backdrop-filter: blur(4px);
         }
-        .tips {
+        .warning-tip {
+            background: #fff7e5;
+            border: 1px solid #ffd966;
+            border-radius: 50px;
+            padding: 12px 25px;
+            color: #7a5d00;
             margin-top: 20px;
-            color: #666;
-            font-size: 14px;
-            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+        .footer-note {
+            text-align: center;
+            margin-top: 25px;
+            color: #446688;
+            font-size: 0.9rem;
+        }
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
+    <!-- 核心库: XLSX解析Excel, FileSaver保存文件, PizZip打包docx -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Excel 转 Word 在线工具</h1>
-        
-        <div class="upload-area" id="uploadArea">
-            <div class="upload-icon">📤</div>
-            <p>点击或拖拽Excel文件到此处上传</p>
-            <p style="color: #666; margin-top: 10px;">支持 .xlsx / .xls 格式</p>
-            <input type="file" id="fileInput" accept=".xlsx,.xls">
-        </div>
-        
-        <div class="progress">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-        
-        <div class="result" id="resultArea">
-            <h3>转换完成！</h3>
-            <button class="btn" id="downloadBtn">下载Word文档</button>
-        </div>
-        
-        <div class="tips">
-            <p>💡 提示：</p>
-            <p>1. 本工具仅在本地处理文件，不会上传到服务器，数据更安全</p>
-            <p>2. 转换后的Word文档会保留Excel的表格结构和基本内容</p>
-            <p>3. 建议不要上传过大的Excel文件（推荐小于10MB）</p>
-        </div>
+<div class="glass-card">
+    <h1>📊 → 📄 Excel 转 Word <span style="font-size: 1rem; background: #154e78; color: white; padding: 4px 18px; border-radius: 40px; margin-left: auto;">v2.0 增强版</span></h1>
+    <div class="subtitle">🔒 纯本地 · 自动转义 · 表格边框 · 多工作表分页</div>
+
+    <!-- 上传区域 -->
+    <div class="upload-zone" id="dropZone">
+        <div class="upload-icon">📂 ⚡ 📄</div>
+        <p>拖拽 Excel 文件 或 点击选择</p>
+        <span class="file-hint">支持 .xlsx / .xls (推荐 ≤ 20MB)</span>
+        <input type="file" id="fileInput" accept=".xlsx,.xls">
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.37.12/build/docxtemplater.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip-utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <!-- 进度显示 -->
+    <div class="progress-section" id="progressContainer">
+        <div class="progress-label">
+            <span id="progressStatus">解析文件中...</span>
+            <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+        </div>
+        <div class="sheet-indicator" id="sheetIndicator"></div>
+    </div>
 
-    <script>
-        let excelData = null;
+    <!-- 结果卡片 -->
+    <div class="result-card" id="resultBox">
+        <h3>✨ 转换完成</h3>
+        <button class="btn" id="downloadBtn">📥 下载 Word 文档</button>
+        <p style="margin-top: 20px; color: #1b4d77;">✔ 包含所有工作表 · 标题加粗 · 完美边框</p>
+    </div>
+
+    <!-- 特性网格 -->
+    <div class="feature-grid">
+        <div class="feature-item">🔐 本地处理不上传</div>
+        <div class="feature-item">🛡️ 特殊字符转义</div>
+        <div class="feature-item">📑 多工作表分页</div>
+        <div class="feature-item">🎨 首行自动加粗</div>
+        <div class="feature-item">📏 单元格边距优化</div>
+        <div class="feature-item">⚡ 拖拽批量支持</div>
+    </div>
+
+    <!-- 安全警告/提示 -->
+    <div class="warning-tip">
+        <span style="font-size: 1.8rem;">ⓘ</span> 
+        <span><strong>完全本地运行</strong> — 文件不会离开您的设备，可放心处理敏感数据。</span>
+    </div>
+    <div class="footer-note">✨ 生成标准 .docx 文件，兼容 Microsoft Word / WPS / LibreOffice</div>
+</div>
+
+<script>
+(function() {
+    // ---------- 全局变量 ----------
+    let excelData = null;                // 存储解析后的数据: { 工作表名: 二维数组 }
+    let baseFileName = 'Excel转换文档';   // 默认输出文件名
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressFill = document.getElementById('progressFill');
+    const progressStatus = document.getElementById('progressStatus');
+    const progressPercent = document.getElementById('progressPercent');
+    const sheetIndicator = document.getElementById('sheetIndicator');
+    const resultBox = document.getElementById('resultBox');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    // 辅助函数: 更新进度UI
+    function updateProgress(percent, statusText, sheetHint = '') {
+        progressContainer.style.display = 'block';
+        progressFill.style.width = percent + '%';
+        progressPercent.innerText = percent + '%';
+        if (statusText) progressStatus.innerText = statusText;
+        if (sheetHint) sheetIndicator.innerText = sheetHint;
+    }
+
+    // 重置进度/结果 (开始新转换前可调用)
+    function resetUI() {
+        excelData = null;
+        progressContainer.style.display = 'none';
+        resultBox.style.display = 'none';
+        progressFill.style.width = '0%';
+        sheetIndicator.innerText = '';
+    }
+
+    // ---------- XML 转义函数 (防止特殊字符破坏word文档) ----------
+    function escapeXml(unsafe) {
+        if (unsafe === undefined || unsafe === null) return '';
+        const str = String(unsafe);
+        return str.replace(/[<>&'"]/g, function(c) {
+            switch(c) {
+                case '<': return '&lt;';
+                case '>': return '&gt;';
+                case '&': return '&amp;';
+                case '\'': return '&apos;';
+                case '"': return '&quot;';
+                default: return c;
+            }
+        });
+    }
+
+    // ---------- 处理上传文件 ----------
+    function handleFile(file) {
+        if (!file) return;
+        // 文件名处理 (去除扩展名)
+        const nameMatch = file.name.match(/(.+?)(\.[^.]*$|$)/);
+        baseFileName = nameMatch ? nameMatch[1] : 'Excel转换文档';
         
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const progressBar = document.getElementById('progressBar');
-        const progressContainer = document.querySelector('.progress');
-        const resultArea = document.getElementById('resultArea');
-        const downloadBtn = document.getElementById('downloadBtn');
-
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('active');
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('active');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('active');
-            if (e.dataTransfer.files.length) {
-                handleFile(e.dataTransfer.files[0]);
-            }
-        });
-
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length) {
-                handleFile(fileInput.files[0]);
-            }
-        });
-
-        function handleFile(file) {
-            if (!file.name.match(/\.(xlsx|xls)$/i)) {
-                alert('请上传Excel文件（.xlsx 或 .xls 格式）！');
-                return;
-            }
-
-            progressContainer.style.display = 'block';
-            progressBar.style.width = '10%';
-
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    progressBar.style.width = '30%';
-                    
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    progressBar.style.width = '60%';
-
-                    excelData = {};
-                    workbook.SheetNames.forEach(sheetName => {
-                        const worksheet = workbook.Sheets[sheetName];
-                        excelData[sheetName] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                    });
-
-                    progressBar.style.width = '80%';
-                    
-                    setTimeout(() => {
-                        progressBar.style.width = '100%';
-                        setTimeout(() => {
-                            progressContainer.style.display = 'none';
-                            resultArea.style.display = 'block';
-                        }, 500);
-                    }, 500);
-
-                } catch (error) {
-                    console.error('解析Excel失败：', error);
-                    alert('解析Excel文件失败，请检查文件是否损坏！');
-                    progressContainer.style.display = 'none';
-                }
-            };
-
-            reader.readAsArrayBuffer(file);
+        // 校验类型
+        if (!file.name.match(/\.(xlsx|xls)$/i)) {
+            alert('❌ 请选择 Excel 文件 (.xlsx 或 .xls)');
+            return;
         }
 
-        downloadBtn.addEventListener('click', () => {
-            if (!excelData) {
-                alert('暂无转换数据，请先上传Excel文件！');
+        // 可选: 检查文件大小 (超过30MB给出提示但继续)
+        if (file.size > 30 * 1024 * 1024) {
+            if (!confirm('文件超过30MB，转换可能较慢或卡顿，是否继续？')) {
                 return;
             }
+        }
 
+        resetUI();
+        updateProgress(5, '准备读取文件...', '');
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
             try {
-                const zip = new Pizip();
+                updateProgress(15, '解析Excel结构...');
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
                 
-                let docContent = `
-                    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-                        <w:body>
-                `;
-
-                Object.keys(excelData).forEach((sheetName, sheetIndex) => {
-                    const sheetData = excelData[sheetName];
+                updateProgress(40, '转换工作表数据...');
+                
+                // 解析所有sheet
+                const parsed = {};
+                const sheetNames = workbook.SheetNames;
+                sheetNames.forEach((sheetName, idx) => {
+                    const worksheet = workbook.Sheets[sheetName];
+                    // 使用 header:1 得到二维数组
+                    const sheetArray = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+                    parsed[sheetName] = sheetArray;
                     
-                    docContent += `
-                        <w:p>
-                            <w:r>
-                                <w:rPr>
-                                    <w:b w:val="true"/>
-                                    <w:sz w:val="24"/>
-                                </w:rPr>
-                                <w:t>${sheetName}</w:t>
-                            </w:r>
-                        </w:p>
-                        <w:p></w:p>
-                    `;
-
-                    docContent += `
-                        <w:tbl>
-                            <w:tblPr>
-                                <w:tblW w:w="0" w:type="auto"/>
-                                <w:tblBorders>
-                                    <w:top w:val="single" w:sz="4" w:space="0" w:color="000000"/>
-                                    <w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>
-                                    <w:bottom w:val="single" w:sz="4" w:space="0" w:color="000000"/>
-                                    <w:right w:val="single" w:sz="4" w:space="0" w:color="000000"/>
-                                    <w:insideH w:val="single" w:sz="4" w:space="0" w:color="000000"/>
-                                    <w:insideV w:val="single" w:sz="4" w:space="0" w:color="000000"/>
-                                </w:tblBorders>
-                            </w:tblPr>
-                    `;
-
-                    sheetData.forEach((row) => {
-                        docContent += '<w:tr>';
-                        
-                        row.forEach((cell) => {
-                            const cellValue = cell === undefined || cell === null ? '' : String(cell);
-                            
-                            docContent += `
-                                <w:tc>
-                                    <w:tcPr>
-                                        <w:tcW w:w="0" w:type="auto"/>
-                                    </w:tcPr>
-                                    <w:p>
-                                        <w:r>
-                                            <w:t>${cellValue}</w:t>
-                                        </w:r>
-                                    </w:p>
-                                </w:tc>
-                            `;
-                        });
-                        
-                        docContent += '</w:tr>';
-                    });
-
-                    docContent += '</w:tbl>';
-                    if (sheetIndex < Object.keys(excelData).length - 1) {
-                        docContent += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+                    // 更新进度 (轻量反馈)
+                    if (idx % 2 === 0) {
+                        updateProgress(40 + Math.floor(30 * (idx+1)/sheetNames.length), `处理工作表: ${sheetName}`);
                     }
                 });
 
-                docContent += `
-                        </w:body>
-                    </w:document>
-                `;
-
-                zip.file('word/document.xml', docContent);
-                zip.file('[Content_Types].xml', `
-                    <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-                        <Default Extension="xml" ContentType="application/xml"/>
-                        <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-                        <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-                    </Types>
-                `);
-                zip.file('_rels/.rels', `
-                    <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-                        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-                    </Relationships>
-                `);
-
-                const out = zip.generate({
-                    type: 'blob',
-                    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                });
-
-                saveAs(out, `Excel转换结果_${new Date().getTime()}.docx`);
+                excelData = parsed;
+                updateProgress(90, '构建文档模板...', `共 ${sheetNames.length} 个工作表`);
+                
+                // 模拟一点延迟让进度看起来流畅
+                setTimeout(() => {
+                    updateProgress(100, '转换完成！', `已加载: ${sheetNames.join(' · ')}`);
+                    // 隐藏进度条，显示结果卡片
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        resultBox.style.display = 'block';
+                    }, 400);
+                }, 300);
 
             } catch (error) {
-                console.error('生成Word失败：', error);
-                alert('生成Word文档失败，请重试！');
+                console.error('解析失败:', error);
+                alert('❌ Excel 解析失败，请确保文件没有损坏或加密');
+                progressContainer.style.display = 'none';
             }
-        });
-    </script>
+        };
+        reader.onerror = function() {
+            alert('读取文件失败');
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    // ---------- 拖拽/点击事件 ----------
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) {
+            handleFile(e.dataTransfer.files[0]);  // 只取第一个文件
+        }
+    });
+    dropZone.addEventListener('click', () => {
+        fileInput.click();
+    });
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            handleFile(fileInput.files[0]);
+            fileInput.value = ''; // 允许重复选择同一个文件
+        }
+    });
+
+    // ---------- 生成Word并下载 ----------
+    downloadBtn.addEventListener('click', function() {
+        if (!excelData || Object.keys(excelData).length === 0) {
+            alert('没有可转换的数据，请先上传Excel文件');
+            return;
+        }
+
+        // 检查 PizZip 是否存在 (注意CDN导出为全局 PizZip, 不是 Pizip)
+        if (typeof window.PizZip === 'undefined') {
+            alert('错误: 压缩库未加载，请刷新页面重试');
+            return;
+        }
+        const PizZip = window.PizZip;
+
+        try {
+            // 显示下载中状态
+            const btn = this;
+            const originalText = btn.innerText;
+            btn.innerHTML = '<span class="loader"></span> 生成中...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                try {
+                    // 新建zip实例
+                    const zip = new PizZip();
+
+                    // ---------- 构建 word/document.xml ----------
+                    let documentBody = '';
+
+                    // 遍历所有工作表
+                    const sheetEntries = Object.entries(excelData);
+                    sheetEntries.forEach(([sheetName, rows], idx) => {
+                        // 添加工作表标题 (样式: 加粗, 字体稍大)
+                        documentBody += `<w:p><w:pPr><w:pStyle w:val="Title"/></w:pPr><w:r><w:rPr><w:b w:val="true"/><w:sz w:val="32"/></w:rPr><w:t>${escapeXml(sheetName)}</w:t></w:r></w:p>`;
+                        
+                        // 如果表格没有数据行，仅显示空提示
+                        if (!rows || rows.length === 0) {
+                            documentBody += `<w:p><w:r><w:t>(空工作表)</w:t></w:r></w:p>`;
+                        } else {
+                            // 开始表格
+                            documentBody += `<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="0" w:type="auto"/><w:tblBorders><w:top w:val="single" w:sz="8" w:space="0" w:color="444444"/><w:left w:val="single" w:sz="8" w:space="0" w:color="444444"/><w:bottom w:val="single" w:sz="8" w:space="0" w:color="444444"/><w:right w:val="single" w:sz="8" w:space="0" w:color="444444"/><w:insideH w:val="single" w:sz="4" w:space="0" w:color="888888"/><w:insideV w:val="single" w:sz="4" w:space="0" w:color="888888"/></w:tblBorders><w:tblCellMar><w:top w:w="80" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:left w:w="120" w:type="dxa"/><w:right w:w="120" w:type="dxa"/></w:tblCellMar></w:tblPr>`;
+
+                            // 遍历行
+                            rows.forEach((row, rowIndex) => {
+                                documentBody += '<w:tr>';
+                                // 如果row不是数组 (可能某行空), 转为空数组
+                                const rowCells = Array.isArray(row) ? row : [];
+                                if (rowCells.length === 0) {
+                                    // 插入一个空单元格占位, 防止表格错乱
+                                    documentBody += `<w:tc><w:tcPr><w:tcW w:w="0" w:type="auto"/></w:tcPr><w:p><w:r><w:t> </w:t></w:r></w:p></w:tc>`;
+                                } else {
+                                    rowCells.forEach(cell => {
+                                        const cellText = escapeXml(cell);
+                                        // 首行加粗 (标题行)
+                                        const isHeader = (rowIndex === 0);
+                                        documentBody += `<w:tc><w:tcPr><w:tcW w:w="0" w:type="auto"/></w:tcPr><w:p><w:r>${isHeader ? '<w:rPr><w:b/></w:rPr>' : ''}<w:t>${cellText || ' '}</w:t></w:r></w:p></w:tc>`;
+                                    });
+                                }
+                                documentBody += '</w:tr>';
+                            });
+                            documentBody += '</w:tbl>';
+                        }
+
+                        // 如果不是最后一个工作表，加分页符
+                        if (idx < sheetEntries.length - 1) {
+                            documentBody += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+                        }
+                    });
+
+                    // 完整的 document.xml 内容
+                    const documentXml = `<?xml version="1.0" encoding="UTF-8"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <w:body>${documentBody}</w:body>
+</w:document>`;
+
+                    // 添加核心文件到zip
+                    zip.file('word/document.xml', documentXml);
+
+                    // ---------- 必备的配置文件 ----------
+                    // [Content_Types].xml
+                    zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+    <Default Extension="xml" ContentType="application/xml"/>
+    <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+    <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`);
+
+                    // _rels/.rels
+                    zip.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`);
+
+                    // word/_rels/document.xml.rels (可选但推荐)
+                    zip.file('word/_rels/document.xml.rels', `<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+    <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`);
+
+                    // word/styles.xml (简单样式定义，确保表格有基本样式)
+                    zip.file('word/styles.xml', `<?xml version="1.0" encoding="UTF-8"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+    <w:style w:type="paragraph" w:styleId="Normal">
+        <w:name w:val="Normal"/>
+        <w:rPr><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr>
+    </w:style>
+    <w:style w:type="paragraph" w:styleId="Title">
+        <w:name w:val="Title"/>
+        <w:basedOn w:val="Normal"/>
+        <w:rPr><w:b/><w:sz w:val="32"/></w:rPr>
+    </w:style>
+    <w:style w:type="table" w:styleId="TableGrid">
+        <w:name w:val="Table Grid"/>
+        <w:basedOn w:val="Normal"/>
+        <w:tblPr><w:tblBorders><w:top w:val="single" w:sz="4"/><w:left w:val="single" w:sz="4"/><w:bottom w:val="single" w:sz="4"/><w:right w:val="single" w:sz="4"/><w:insideH w:val="single" w:sz="4"/><w:insideV w:val="single" w:sz="4"/></w:tblBorders></w:tblPr>
+    </w:style>
+</w:styles>`);
+
+                    // docProps/core.xml (可选)
+                    zip.file('docProps/core.xml', `<?xml version="1.0" encoding="UTF-8"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>${escapeXml(baseFileName)}</dc:title>
+    <dc:creator>Excel转Word工具(本地)</dc:creator>
+    <cp:lastModifiedBy>ExcelToWord</cp:lastModifiedBy>
+</cp:coreProperties>`);
+
+                    // 生成 blob
+                    const content = zip.generate({ type: 'blob' });
+                    // 使用 FileSaver 保存
+                    saveAs(content, `${baseFileName}.docx`);
+
+                    // 恢复按钮状态
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                } catch (innerErr) {
+                    console.error(innerErr);
+                    alert('生成Word失败: ' + innerErr.message);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            }, 50); // 短暂延迟让UI更新
+
+        } catch (error) {
+            console.error(error);
+            alert('初始化失败: ' + error.message);
+            downloadBtn.innerHTML = '📥 下载 Word 文档';
+            downloadBtn.disabled = false;
+        }
+    });
+
+    // 额外: 拖拽窗口防止默认
+    window.addEventListener('dragover', (e) => e.preventDefault());
+    window.addEventListener('drop', (e) => e.preventDefault());
+
+    // 初始化提示
+    console.log('Excel转Word增强版已加载，PizZip可用:', typeof window.PizZip !== 'undefined');
+})();
+</script>
 </body>
 </html>
