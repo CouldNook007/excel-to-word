@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel转Word在线工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            padding: 50px 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 2px dashed #0078d7;
+            border-radius: 8px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 30px;
+        }
+        .upload-area:hover {
+            background-color: #f0f7ff;
+        }
+        .upload-area.active {
+            background-color: #e8f4ff;
+        }
+        .upload-icon {
+            font-size: 60px;
+            color: #0078d7;
+            margin-bottom: 20px;
+        }
+        #fileInput {
+            display: none;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #0078d7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background-color: #005a9e;
+        }
+        .progress {
+            display: none;
+            margin: 20px 0;
+            height: 8px;
+            background-color: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #0078d7;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .result {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e8f4ff;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .tips {
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Excel 转 Word 在线工具</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📤</div>
+            <p>点击或拖拽Excel文件到此处上传</p>
+            <p style="color: #666; margin-top: 10px;">支持 .xlsx / .xls 格式</p>
+            <input type="file" id="fileInput" accept=".xlsx,.xls">
+        </div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="result" id="resultArea">
+            <h3>转换完成！</h3>
+            <button class="btn" id="downloadBtn">下载Word文档</button>
+        </div>
+        
+        <div class="tips">
+            <p>💡 提示：</p>
+            <p>1. 本工具仅在本地处理文件，不会上传到服务器，数据更安全</p>
+            <p>2. 转换后的Word文档会保留Excel的表格结构和基本内容</p>
+            <p>3. 建议不要上传过大的Excel文件（推荐小于10MB）</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.37.12/build/docxtemplater.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip-utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+    <script>
+        let excelData = null;
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const progressBar = document.getElementById('progressBar');
+        const progressContainer = document.querySelector('.progress');
+        const resultArea = document.getElementById('resultArea');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('active');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('active');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('active');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                alert('请上传Excel文件（.xlsx 或 .xls 格式）！');
+                return;
+            }
+
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '10%';
+
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    progressBar.style.width = '30%';
+                    
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    progressBar.style.width = '60%';
+
+                    excelData = {};
+                    workbook.SheetNames.forEach(sheetName => {
+                        const worksheet = workbook.Sheets[sheetName];
+                        excelData[sheetName] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    });
+
+                    progressBar.style.width = '80%';
+                    
+                    setTimeout(() => {
+                        progressBar.style.width = '100%';
+                        setTimeout(() => {
+                            progressContainer.style.display = 'none';
+                            resultArea.style.display = 'block';
+                        }, 500);
+                    }, 500);
+
+                } catch (error) {
+                    console.error('解析Excel失败：', error);
+                    alert('解析Excel文件失败，请检查文件是否损坏！');
+                    progressContainer.style.display = 'none';
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            if (!excelData) {
+                alert('暂无转换数据，请先上传Excel文件！');
+                return;
+            }
+
+            try {
+                const zip = new Pizip();
+                
+                let docContent = `
+                    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+                        <w:body>
+                `;
+
+                Object.keys(excelData).forEach((sheetName, sheetIndex) => {
+                    const sheetData = excelData[sheetName];
+                    
+                    docContent += `
+                        <w:p>
+                            <w:r>
+                                <w:rPr>
+                                    <w:b w:val="true"/>
+                                    <w:sz w:val="24"/>
+                                </w:rPr>
+                                <w:t>${sheetName}</w:t>
+                            </w:r>
+                        </w:p>
+                        <w:p></w:p>
+                    `;
+
+                    docContent += `
+                        <w:tbl>
+                            <w:tblPr>
+                                <w:tblW w:w="0" w:type="auto"/>
+                                <w:tblBorders>
+                                    <w:top w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+                                    <w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+                                    <w:bottom w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+                                    <w:right w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+                                    <w:insideH w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+                                    <w:insideV w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+                                </w:tblBorders>
+                            </w:tblPr>
+                    `;
+
+                    sheetData.forEach((row) => {
+                        docContent += '<w:tr>';
+                        
+                        row.forEach((cell) => {
+                            const cellValue = cell === undefined || cell === null ? '' : String(cell);
+                            
+                            docContent += `
+                                <w:tc>
+                                    <w:tcPr>
+                                        <w:tcW w:w="0" w:type="auto"/>
+                                    </w:tcPr>
+                                    <w:p>
+                                        <w:r>
+                                            <w:t>${cellValue}</w:t>
+                                        </w:r>
+                                    </w:p>
+                                </w:tc>
+                            `;
+                        });
+                        
+                        docContent += '</w:tr>';
+                    });
+
+                    docContent += '</w:tbl>';
+                    if (sheetIndex < Object.keys(excelData).length - 1) {
+                        docContent += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+                    }
+                });
+
+                docContent += `
+                        </w:body>
+                    </w:document>
+                `;
+
+                zip.file('word/document.xml', docContent);
+                zip.file('[Content_Types].xml', `
+                    <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+                        <Default Extension="xml" ContentType="application/xml"/>
+                        <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+                        <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+                    </Types>
+                `);
+                zip.file('_rels/.rels', `
+                    <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+                        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+                    </Relationships>
+                `);
+
+                const out = zip.generate({
+                    type: 'blob',
+                    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                });
+
+                saveAs(out, `Excel转换结果_${new Date().getTime()}.docx`);
+
+            } catch (error) {
+                console.error('生成Word失败：', error);
+                alert('生成Word文档失败，请重试！');
+            }
+        });
+    </script>
+</body>
+</html>
